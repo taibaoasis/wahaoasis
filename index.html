@@ -1,0 +1,1865 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>واحة طيبة - نظام الحجز المتكامل</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --gold-dark: #8B6914;
+    --dark: #0D0D0D;
+    --dark2: #141414;
+    --dark3: #1C1C1C;
+    --dark4: #242424;
+    --card: #1A1A1A;
+    --border: rgba(201,168,76,0.25);
+    --text: #F0EAD6;
+    --text-muted: #8A8270;
+    --green: #2ECC71;
+    --red: #E74C3C;
+    --blue: #3498DB;
+    --seat-available: #2ECC71;
+    --seat-taken: #E74C3C;
+    --seat-selected: #C9A84C;
+    --seat-vip: #9B59B6;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Tajawal', sans-serif;
+    background: var(--dark);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 1000;
+    opacity: 0.4;
+  }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, var(--dark2) 0%, var(--dark3) 100%);
+    border-bottom: 2px solid var(--gold);
+    padding: 0 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 4px 30px rgba(201,168,76,0.15);
+  }
+
+  .header-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 72px;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  .logo-icon {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    box-shadow: 0 4px 15px rgba(201,168,76,0.4);
+  }
+
+  .logo-text h1 {
+    font-family: 'Cairo', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: var(--gold);
+    line-height: 1.1;
+  }
+
+  .logo-text p {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  .header-nav {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .nav-btn {
+    padding: 0.5rem 1.2rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-muted);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .nav-btn:hover, .nav-btn.active {
+    background: var(--gold);
+    color: var(--dark);
+    border-color: var(--gold);
+    font-weight: 700;
+  }
+
+  /* MAIN LAYOUT */
+  .main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem;
+  }
+
+  /* PAGE TABS */
+  .page-tabs {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+
+  .page-tab {
+    padding: 0.8rem 2rem;
+    border-radius: 10px 10px 0 0;
+    border: 1px solid var(--border);
+    border-bottom: none;
+    background: var(--dark3);
+    color: var(--text-muted);
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .page-tab.active {
+    background: var(--gold);
+    color: var(--dark);
+    border-color: var(--gold);
+  }
+
+  /* PAGE SECTIONS */
+  .page-section { display: none; }
+  .page-section.active { display: block; }
+
+  /* CARDS */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .card-title {
+    font-family: 'Cairo', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.8rem;
+  }
+
+  /* FORM GRID */
+  .form-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  .form-group label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .form-group input, .form-group select, .form-group textarea {
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.7rem 1rem;
+    color: var(--text);
+    font-family: 'Tajawal', sans-serif;
+    font-size: 0.95rem;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .form-group input:focus, .form-group select:focus {
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.1);
+  }
+
+  .form-group select option { background: var(--dark3); }
+
+  /* BUTTONS */
+  .btn {
+    padding: 0.75rem 2rem;
+    border-radius: 10px;
+    border: none;
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--dark);
+    box-shadow: 0 4px 15px rgba(201,168,76,0.3);
+  }
+
+  .btn-gold:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(201,168,76,0.5);
+  }
+
+  .btn-outline {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold);
+  }
+
+  .btn-outline:hover { background: var(--gold); color: var(--dark); }
+
+  .btn-red {
+    background: var(--red);
+    color: white;
+  }
+
+  /* ===================== BUS SECTION ===================== */
+  .bus-layout {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .bus-vehicle {
+    background: linear-gradient(180deg, #1A1A1A 0%, #111 100%);
+    border: 2px solid var(--border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Bus exterior shape */
+  .bus-exterior {
+    position: relative;
+    background: linear-gradient(135deg, #2A2A2A, #1A1A1A);
+    border-radius: 30px 30px 20px 20px;
+    border: 2px solid #444;
+    padding: 1.5rem 1rem 1rem;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5), 0 8px 30px rgba(0,0,0,0.5);
+  }
+
+  /* Bus windshield */
+  .bus-windshield {
+    background: linear-gradient(135deg, #1a3a5c, #0d2340);
+    border-radius: 20px 20px 5px 5px;
+    height: 50px;
+    margin-bottom: 1rem;
+    border: 2px solid #333;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .bus-windshield::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 2px;
+    height: 100%;
+    background: rgba(255,255,255,0.1);
+  }
+
+  .bus-windshield-text {
+    color: rgba(255,255,255,0.5);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .bus-title-bar {
+    text-align: center;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 1rem;
+    letter-spacing: 2px;
+  }
+
+  /* Aisle and seats */
+  .bus-interior {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+  }
+
+  .seats-side {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .seat-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .aisle {
+    width: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .row-num {
+    font-size: 0.6rem;
+    color: var(--text-muted);
+    width: 16px;
+    text-align: center;
+  }
+
+  .seat {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px 8px 5px 5px;
+    border: 2px solid;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+    font-weight: 700;
+  }
+
+  /* Seat headrest */
+  .seat::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 4px;
+    right: 4px;
+    height: 6px;
+    border-radius: 4px 4px 0 0;
+    border: 2px solid;
+    border-color: inherit;
+    background: inherit;
+  }
+
+  .seat.available {
+    background: linear-gradient(180deg, #2ecc71aa, #27ae60aa);
+    border-color: #27ae60;
+    color: rgba(255,255,255,0.8);
+  }
+
+  .seat.available:hover {
+    background: linear-gradient(180deg, #2ecc71, #27ae60);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(46,204,113,0.4);
+  }
+
+  .seat.taken {
+    background: linear-gradient(180deg, #e74c3caa, #c0392baa);
+    border-color: #c0392b;
+    color: rgba(255,255,255,0.5);
+    cursor: not-allowed;
+  }
+
+  .seat.selected {
+    background: linear-gradient(180deg, var(--gold), var(--gold-dark));
+    border-color: var(--gold-light);
+    color: var(--dark);
+    transform: translateY(-3px);
+    box-shadow: 0 6px 15px rgba(201,168,76,0.5);
+  }
+
+  .seat.driver {
+    background: linear-gradient(180deg, #3498dbaa, #2980b9aa);
+    border-color: #2980b9;
+    cursor: not-allowed;
+    font-size: 1rem;
+  }
+
+  /* Bus back */
+  .bus-back {
+    background: linear-gradient(90deg, #2a2a2a, #333);
+    border-radius: 5px 5px 15px 15px;
+    height: 30px;
+    margin-top: 0.5rem;
+    border: 2px solid #444;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .bus-back-seats {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    justify-content: center;
+  }
+
+  /* Legend */
+  .seat-legend {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+    justify-content: center;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .legend-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+  }
+
+  /* Booking panel */
+  .booking-panel {
+    position: sticky;
+    top: 90px;
+  }
+
+  .booking-summary {
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+  }
+
+  .summary-title {
+    font-family: 'Cairo', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gold);
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.8rem;
+    margin-bottom: 1rem;
+  }
+
+  .selected-seats-display {
+    min-height: 60px;
+    background: var(--dark4);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .seat-badge {
+    background: var(--gold);
+    color: var(--dark);
+    padding: 0.3rem 0.7rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    animation: popIn 0.2s ease;
+  }
+
+  @keyframes popIn {
+    from { transform: scale(0); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+  }
+
+  .price-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.9rem;
+  }
+
+  .price-row.total {
+    border-bottom: none;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--gold);
+    padding-top: 0.8rem;
+    border-top: 2px solid var(--border);
+    margin-top: 0.5rem;
+  }
+
+  /* ===================== HOTEL SECTION ===================== */
+  .hotels-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-top: 1.5rem;
+  }
+
+  .hotel-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .hotel-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(201,168,76,0.15);
+  }
+
+  .hotel-img {
+    height: 160px;
+    background: linear-gradient(135deg, var(--dark3), var(--dark4));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hotel-img::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, transparent 60%);
+  }
+
+  .hotel-stars {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: rgba(0,0,0,0.6);
+    padding: 0.3rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    z-index: 1;
+    color: var(--gold);
+  }
+
+  .hotel-info { padding: 1.2rem; }
+
+  .hotel-name {
+    font-family: 'Cairo', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 0.3rem;
+  }
+
+  .hotel-location {
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    margin-bottom: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+  }
+
+  .hotel-amenities {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+  }
+
+  .amenity-tag {
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  .hotel-price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .hotel-price {
+    font-family: 'Cairo', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 900;
+    color: var(--gold);
+  }
+
+  .hotel-price span {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  /* ===================== INVOICE SECTION ===================== */
+  .invoice-container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .invoice-paper {
+    background: white;
+    color: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    direction: rtl;
+    font-family: 'Tajawal', sans-serif;
+  }
+
+  .invoice-header {
+    background: linear-gradient(135deg, #0d1b35, #1a3a5c);
+    color: white;
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .invoice-logo {
+    font-family: 'Cairo', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 900;
+    color: var(--gold);
+  }
+
+  .invoice-logo small {
+    display: block;
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.6);
+    font-weight: 400;
+  }
+
+  .invoice-num {
+    text-align: left;
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.7);
+  }
+
+  .invoice-num strong {
+    display: block;
+    font-size: 1.2rem;
+    color: var(--gold);
+  }
+
+  .invoice-body { padding: 2rem; }
+
+  .inv-section-title {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #666;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 0.3rem;
+  }
+
+  .inv-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+    font-size: 0.9rem;
+  }
+
+  .inv-table th {
+    background: #f5f5f5;
+    padding: 0.6rem 0.8rem;
+    text-align: right;
+    font-weight: 700;
+    border: 1px solid #ddd;
+    font-size: 0.82rem;
+  }
+
+  .inv-table td {
+    padding: 0.6rem 0.8rem;
+    border: 1px solid #ddd;
+  }
+
+  .inv-total-box {
+    background: linear-gradient(135deg, #0d1b35, #1a3a5c);
+    color: white;
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 0 0 12px 12px;
+  }
+
+  .inv-total-amount {
+    font-family: 'Cairo', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 900;
+    color: var(--gold);
+  }
+
+  /* ===================== DASHBOARD ===================== */
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    text-align: center;
+    transition: transform 0.2s;
+  }
+
+  .stat-card:hover { transform: translateY(-3px); }
+
+  .stat-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-num {
+    font-family: 'Cairo', sans-serif;
+    font-size: 2rem;
+    font-weight: 900;
+    color: var(--gold);
+  }
+
+  .stat-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-top: 0.2rem;
+  }
+
+  /* Bookings list */
+  .bookings-list { display: flex; flex-direction: column; gap: 1rem; }
+
+  .booking-item {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    transition: border-color 0.2s;
+  }
+
+  .booking-item:hover { border-color: var(--gold); }
+
+  .booking-id {
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    color: var(--gold);
+    font-size: 0.9rem;
+  }
+
+  .booking-type-badge {
+    padding: 0.25rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .badge-hotel { background: rgba(52,152,219,0.2); color: #3498db; border: 1px solid #3498db; }
+  .badge-bus { background: rgba(46,204,113,0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+  .badge-combo { background: rgba(201,168,76,0.2); color: var(--gold); border: 1px solid var(--gold); }
+
+  .status-badge {
+    padding: 0.25rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .status-confirmed { background: rgba(46,204,113,0.2); color: #2ecc71; }
+  .status-pending { background: rgba(241,196,15,0.2); color: #f1c40f; }
+
+  /* NOTIFICATION */
+  .notification {
+    position: fixed;
+    bottom: 2rem;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: var(--dark);
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 700;
+    font-size: 1rem;
+    box-shadow: 0 8px 30px rgba(201,168,76,0.4);
+    z-index: 9999;
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    white-space: nowrap;
+  }
+
+  .notification.show { transform: translateX(-50%) translateY(0); }
+
+  /* MODAL */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    backdrop-filter: blur(8px);
+    z-index: 500;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--dark3);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    max-width: 600px;
+    width: 100%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from { transform: translateY(30px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+
+  .modal-close {
+    position: absolute;
+    top: 1rem;
+    left: 1rem;
+    background: var(--dark4);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 36px;
+    height: 36px;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+
+  .modal-close:hover { background: var(--red); color: white; border-color: var(--red); }
+
+  .modal-title {
+    font-family: 'Cairo', sans-serif;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--gold);
+    margin-bottom: 1.5rem;
+    padding-left: 2rem;
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--dark); }
+  ::-webkit-scrollbar-thumb { background: var(--gold-dark); border-radius: 3px; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .bus-layout { grid-template-columns: 1fr; }
+    .booking-panel { position: static; }
+    .main { padding: 1rem; }
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+  }
+
+  .empty-state .icon { font-size: 4rem; margin-bottom: 1rem; }
+
+  .trip-filter-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    align-items: flex-end;
+  }
+
+  .trip-filter-row .form-group { flex: 1; min-width: 160px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon" style="background:linear-gradient(135deg,#fff,#ddd); color:#000; font-size:14px; font-weight:900; font-family:'Cairo',sans-serif; letter-spacing:-1px;">واحة</div>
+      <div class="logo-text">
+        <h1>واحة طيبة للسفريات والعمرة</h1>
+        <p>رحلات عمرة - حجز طيران - فنادق &nbsp;|&nbsp; الدمام، حي ابن خلدون &nbsp;|&nbsp; 0534046143</p>
+      </div>
+    </div>
+    <div class="header-nav">
+      <button class="nav-btn active" onclick="showPage('dashboard')">🏠 الرئيسية</button>
+      <button class="nav-btn" onclick="showPage('bus')">🚌 حجز باص</button>
+      <button class="nav-btn" onclick="showPage('hotel')">🏨 حجز فندق</button>
+      <button class="nav-btn" onclick="showPage('invoices')">🧾 الفواتير</button>
+    </div>
+  </div>
+</header>
+
+<div class="main">
+
+  <!-- ===================== DASHBOARD ===================== -->
+  <div class="page-section active" id="page-dashboard">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">🚌</div>
+        <div class="stat-num" id="stat-bus">0</div>
+        <div class="stat-label">حجوزات باصات</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">🏨</div>
+        <div class="stat-num" id="stat-hotel">0</div>
+        <div class="stat-label">حجوزات فنادق</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">👥</div>
+        <div class="stat-num" id="stat-clients">0</div>
+        <div class="stat-label">عملاء</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon">💰</div>
+        <div class="stat-num" id="stat-revenue">0</div>
+        <div class="stat-label">إجمالي الإيرادات (ر.س)</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📋 آخر الحجوزات</div>
+      <div class="bookings-list" id="bookings-list">
+        <div class="empty-state">
+          <div class="icon">📭</div>
+          <p>لا توجد حجوزات بعد. ابدأ بحجز باص أو فندق!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== BUS SECTION ===================== -->
+  <div class="page-section" id="page-bus">
+    <div class="card">
+      <div class="card-title">🚌 معلومات الرحلة</div>
+      <div class="trip-filter-row">
+        <div class="form-group">
+          <label>من</label>
+          <select id="trip-from">
+            <option>الرياض</option><option>جدة</option><option>الدمام</option>
+            <option>المدينة المنورة</option><option>مكة المكرمة</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>إلى</label>
+          <select id="trip-to">
+            <option>مكة المكرمة</option><option>المدينة المنورة</option>
+            <option>الرياض</option><option>جدة</option><option>الدمام</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>تاريخ الرحلة</label>
+          <input type="date" id="trip-date" value="2026-01-30">
+        </div>
+        <div class="form-group">
+          <label>نوع الباص</label>
+          <select id="bus-type" onchange="updateBusPrice()">
+            <option value="480">فاخر VIP - 480 ر.س</option>
+            <option value="350">عادي - 350 ر.س</option>
+            <option value="600">درجة أولى - 600 ر.س</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="bus-layout">
+      <!-- BUS VISUAL -->
+      <div class="bus-vehicle">
+        <div class="card-title">🚌 اختر مقعدك - باص 50 راكب</div>
+
+        <div class="bus-exterior">
+          <!-- Windshield -->
+          <div class="bus-windshield">
+            <div class="bus-windshield-text">🪟 نافذة السائق</div>
+            <div style="font-size:1.5rem">👨‍✈️</div>
+            <div class="bus-windshield-text">المرآة الأمامية</div>
+          </div>
+
+          <div class="bus-title-bar">✦ مقاعد الركاب ✦</div>
+
+          <!-- Driver seat -->
+          <div style="display:flex; justify-content:flex-start; padding-right:1rem; margin-bottom:8px;">
+            <div class="seat driver" title="مقعد السائق">🎯</div>
+            <div style="font-size:0.7rem; color:var(--text-muted); margin-right:0.5rem; align-self:center;">السائق</div>
+          </div>
+
+          <!-- Seats: 2+2 layout, 12 rows = 48 + 2 back = 50 -->
+          <div class="bus-interior" id="bus-seats-container">
+            <!-- Generated by JS -->
+          </div>
+
+          <!-- Back row -->
+          <div style="margin-top:10px;">
+            <div style="text-align:center; font-size:0.65rem; color:var(--text-muted); margin-bottom:4px;">الصف الخلفي</div>
+            <div class="bus-back-seats" id="back-row"></div>
+          </div>
+
+          <div class="bus-back">
+            <span style="font-size:0.7rem; color:#555;">🚪 باب الخروج</span>
+          </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="seat-legend">
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#2ecc71;"></div>
+            <span>متاح</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:var(--gold);"></div>
+            <span>محدد</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#e74c3c;"></div>
+            <span>محجوز</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-dot" style="background:#3498db;"></div>
+            <span>السائق</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- BOOKING PANEL -->
+      <div class="booking-panel">
+        <div class="booking-summary">
+          <div class="summary-title">📝 ملخص الحجز</div>
+
+          <div style="margin-bottom:1rem;">
+            <div class="form-group" style="margin-bottom:0.8rem;">
+              <label>اسم العميل</label>
+              <input type="text" id="client-name" placeholder="معاذ عبد الكريم">
+            </div>
+            <div class="form-group" style="margin-bottom:0.8rem;">
+              <label>رقم الهوية</label>
+              <input type="text" id="client-id" placeholder="2454060209">
+            </div>
+            <div class="form-group" style="margin-bottom:0.8rem;">
+              <label>رقم الجوال</label>
+              <input type="text" id="client-phone" placeholder="0500219761">
+            </div>
+            <div class="form-group">
+              <label>الجنسية</label>
+              <select id="client-nationality">
+                <option>سعودي</option><option>يمني</option><option>مصري</option>
+                <option>سوري</option><option>أردني</option><option>باكستاني</option>
+                <option>هندي</option><option>أخرى</option>
+              </select>
+            </div>
+          </div>
+
+          <div style="font-size:0.85rem; color:var(--text-muted); margin-bottom:0.5rem; font-weight:600;">المقاعد المختارة:</div>
+          <div class="selected-seats-display" id="selected-seats-display">
+            <span style="color:var(--text-muted); font-size:0.85rem;">لم يتم اختيار مقاعد بعد</span>
+          </div>
+
+          <div class="price-row">
+            <span>عدد المقاعد</span>
+            <span id="seats-count">0</span>
+          </div>
+          <div class="price-row">
+            <span>سعر المقعد</span>
+            <span id="seat-price">480 ر.س</span>
+          </div>
+          <div class="price-row">
+            <span>المجموع الفرعي</span>
+            <span id="subtotal">0 ر.س</span>
+          </div>
+          <div class="price-row">
+            <span>ضريبة القيمة المضافة (15%)</span>
+            <span id="tax-amount">0 ر.س</span>
+          </div>
+          <div class="price-row total">
+            <span>الإجمالي</span>
+            <span id="total-amount">0 ر.س</span>
+          </div>
+
+          <div style="margin-top:1rem;">
+            <div class="form-group" style="margin-bottom:0.8rem;">
+              <label>طريقة الدفع</label>
+              <select id="payment-method">
+                <option>نقدي</option><option>مدى</option><option>فيزا</option>
+                <option>تحويل بنكي</option><option>آجل</option>
+              </select>
+            </div>
+          </div>
+
+          <button class="btn btn-gold" style="width:100%; justify-content:center; margin-top:0.5rem;" onclick="confirmBusBooking()">
+            ✅ تأكيد الحجز وإصدار فاتورة
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===================== HOTEL SECTION ===================== -->
+  <div class="page-section" id="page-hotel">
+    <div class="card">
+      <div class="card-title">🔍 بحث عن فندق</div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>المدينة</label>
+          <select id="hotel-city" onchange="filterHotels()">
+            <option value="">كل المدن</option>
+            <option value="مكة المكرمة">مكة المكرمة</option>
+            <option value="المدينة المنورة">المدينة المنورة</option>
+            <option value="جدة">جدة</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>تاريخ الدخول</label>
+          <input type="date" id="checkin" value="2026-01-30">
+        </div>
+        <div class="form-group">
+          <label>تاريخ الخروج</label>
+          <input type="date" id="checkout" value="2026-01-31">
+        </div>
+        <div class="form-group">
+          <label>عدد الأشخاص</label>
+          <input type="number" id="guests" value="1" min="1" max="20">
+        </div>
+        <div class="form-group">
+          <label>نوع الغرفة</label>
+          <select id="room-type">
+            <option>غرفة مفردة</option><option>غرفة مزدوجة</option>
+            <option>جناح</option><option>غرفة عائلية</option>
+          </select>
+        </div>
+        <div class="form-group" style="justify-content:flex-end;">
+          <button class="btn btn-gold" onclick="filterHotels()">🔍 بحث</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="hotels-grid" id="hotels-grid">
+      <!-- Generated by JS -->
+    </div>
+  </div>
+
+  <!-- ===================== INVOICES SECTION ===================== -->
+  <div class="page-section" id="page-invoices">
+    <div class="card">
+      <div class="card-title">🧾 سجل الفواتير</div>
+      <div id="invoices-list">
+        <div class="empty-state">
+          <div class="icon">📄</div>
+          <p>لا توجد فواتير بعد</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- HOTEL BOOKING MODAL -->
+<div class="modal-overlay" id="hotel-modal">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal('hotel-modal')">✕</button>
+    <div class="modal-title" id="modal-hotel-name">حجز فندق</div>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>اسم العميل</label>
+        <input type="text" id="h-client-name" placeholder="معاذ عبد الكريم">
+      </div>
+      <div class="form-group">
+        <label>رقم الهوية</label>
+        <input type="text" id="h-client-id" placeholder="2454060209">
+      </div>
+      <div class="form-group">
+        <label>رقم الجوال</label>
+        <input type="text" id="h-client-phone" placeholder="0500219761">
+      </div>
+      <div class="form-group">
+        <label>الجنسية</label>
+        <select id="h-client-nat">
+          <option>سعودي</option><option>يمني</option><option>مصري</option><option>أخرى</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>تاريخ الدخول</label>
+        <input type="date" id="h-checkin" value="2026-01-30">
+      </div>
+      <div class="form-group">
+        <label>تاريخ الخروج</label>
+        <input type="date" id="h-checkout" value="2026-01-31">
+      </div>
+      <div class="form-group">
+        <label>عدد الغرف</label>
+        <input type="number" id="h-rooms" value="1" min="1" max="10">
+      </div>
+      <div class="form-group">
+        <label>طريقة الدفع</label>
+        <select id="h-payment">
+          <option>نقدي</option><option>مدى</option><option>فيزا</option><option>تحويل بنكي</option>
+        </select>
+      </div>
+    </div>
+    <div id="hotel-price-summary" style="margin: 1rem 0; background: var(--dark4); border-radius: 10px; padding: 1rem;"></div>
+    <button class="btn btn-gold" style="width:100%; justify-content:center;" onclick="confirmHotelBooking()">
+      ✅ تأكيد الحجز وإصدار فاتورة
+    </button>
+  </div>
+</div>
+
+<!-- INVOICE MODAL -->
+<div class="modal-overlay" id="invoice-modal">
+  <div class="modal" style="max-width:750px;">
+    <button class="modal-close" onclick="closeModal('invoice-modal')">✕</button>
+    <div id="invoice-content"></div>
+    <div style="display:flex; gap:1rem; margin-top:1rem;">
+      <button class="btn btn-gold" onclick="printInvoice()">🖨️ طباعة</button>
+      <button class="btn btn-outline" onclick="closeModal('invoice-modal')">إغلاق</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.75);backdrop-filter:blur(6px);z-index:9998;align-items:center;justify-content:center;flex-direction:column;gap:1rem;">
+  <div style="width:60px;height:60px;border:4px solid #333;border-top-color:#C9A84C;border-radius:50%;animation:spin 0.8s linear infinite;"></div>
+  <div style="color:#C9A84C;font-family:Cairo,sans-serif;font-size:1.1rem;font-weight:700;">جاري الاتصال بقاعدة البيانات...</div>
+</div>
+<style>@keyframes spin{to{transform:rotate(360deg);}}</style>
+
+<!-- NOTIFICATION -->
+<div class="notification" id="notification">✅ تم الحجز بنجاح!</div>
+
+<script>
+// ============ SUPABASE CONFIG ============
+const SUPABASE_URL = 'https://zwxhierepdfsvaaxygj.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp3eGhpZXJlcGRmc3ZiYWF4eWdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA1MTk4OTYsImV4cCI6MjA5NjA5NTg5Nn0.6Ekn0YFOmk2BtwPBSrRyH3MHVhaqur--qjQyqBzncyU';
+
+const sb = {
+  async query(table, options = {}) {
+    let url = `${SUPABASE_URL}/rest/v1/${table}`;
+    const params = [];
+    if (options.select) params.push(`select=${encodeURIComponent(options.select)}`);
+    if (options.filter) params.push(options.filter);
+    if (options.order) params.push(`order=${options.order}`);
+    if (options.limit) params.push(`limit=${options.limit}`);
+    if (params.length) url += '?' + params.join('&');
+    const res = await fetch(url, {
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error(t); }
+    return res.json();
+  },
+  async insert(table, data) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      },
+      body: JSON.stringify(data)
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error(t); }
+    return res.json();
+  },
+  async remove(table, id) {
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?id=eq.${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+      headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+    });
+    if (!res.ok) { const t = await res.text(); throw new Error(t); }
+    return true;
+  }
+};
+
+// ============ STATE ============
+let selectedSeats = [];
+let takenSeats = [];
+let allBookings = [];
+let currentHotel = null;
+let invoiceCounter = 18165;
+
+// ============ LOAD DATA FROM SUPABASE ============
+async function loadFromSupabase() {
+  showLoadingOverlay(true);
+  try {
+    const data = await sb.query('bookings', { order: 'created_at.desc' });
+    allBookings = data.map(r => ({
+      id: r.id,
+      type: r.type,
+      client: r.client,
+      clientId: r.client_id,
+      phone: r.phone,
+      nationality: r.nationality,
+      status: r.status || 'confirmed',
+      subtotal: Number(r.subtotal) || 0,
+      tax: Number(r.tax) || 0,
+      total: Number(r.total) || 0,
+      payment: r.payment,
+      timestamp: r.created_at ? new Date(r.created_at).toLocaleDateString('ar-SA') : '-',
+      seats: r.seats ? r.seats.split(',').map(Number) : [],
+      from: r.trip_from,
+      to: r.trip_to,
+      date: r.trip_date,
+      busType: r.bus_type,
+      price: Number(r.seat_price) || 0,
+      hotel: r.hotel,
+      city: r.city,
+      checkin: r.checkin,
+      checkout: r.checkout,
+      nights: r.nights,
+      rooms: r.rooms,
+      pricePerNight: Number(r.price_per_night) || 0,
+    }));
+    takenSeats = [];
+    allBookings.filter(b => b.type === 'bus').forEach(b => { takenSeats = [...takenSeats, ...b.seats]; });
+    if (allBookings.length > 0) {
+      const nums = allBookings.map(b => parseInt(b.id.replace(/\D/g,''))).filter(n => !isNaN(n));
+      if (nums.length) invoiceCounter = Math.max(...nums);
+    }
+    updateDashboard();
+    renderInvoicesList();
+    showNotification('✅ تم تحميل البيانات من قاعدة البيانات');
+  } catch(e) {
+    showNotification('⚠️ خطأ في الاتصال: ' + e.message);
+    console.error(e);
+  }
+  showLoadingOverlay(false);
+}
+
+function showLoadingOverlay(show) {
+  document.getElementById('loading-overlay').style.display = show ? 'flex' : 'none';
+}
+
+// ============ PAGE NAV ============
+function showPage(page) {
+  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  const btns = document.querySelectorAll('.nav-btn');
+  btns.forEach(b => { if (b.getAttribute('onclick') && b.getAttribute('onclick').includes(page)) b.classList.add('active'); });
+  if (page === 'bus') renderBus();
+  if (page === 'hotel') renderHotels();
+  if (page === 'dashboard') updateDashboard();
+  if (page === 'invoices') renderInvoicesList();
+}
+
+// ============ BUS ============
+function renderBus() {
+  const container = document.getElementById('bus-seats-container');
+  const backRow = document.getElementById('back-row');
+  container.innerHTML = '';
+  backRow.innerHTML = '';
+  let leftSide = document.createElement('div');
+  leftSide.className = 'seats-side';
+  let rightSide = document.createElement('div');
+  rightSide.className = 'seats-side';
+  let aisleDiv = document.createElement('div');
+  aisleDiv.style.cssText = 'display:flex;flex-direction:column;gap:8px;width:24px;';
+  for (let row = 1; row <= 12; row++) {
+    const s1 = (row - 1) * 4 + 1;
+    const s2 = s1 + 1;
+    const s3 = s1 + 2;
+    const s4 = s1 + 3;
+    let leftRow = document.createElement('div');
+    leftRow.className = 'seat-row';
+    leftRow.innerHTML = makeSeatEl(s1) + makeSeatEl(s2);
+    let rightRow = document.createElement('div');
+    rightRow.className = 'seat-row';
+    rightRow.innerHTML = makeSeatEl(s3) + makeSeatEl(s4);
+    let aisleLabel = document.createElement('div');
+    aisleLabel.style.cssText = 'height:40px;display:flex;align-items:center;justify-content:center;font-size:0.55rem;color:#333;font-weight:700;';
+    aisleLabel.textContent = row;
+    leftSide.appendChild(leftRow);
+    rightSide.appendChild(rightRow);
+    aisleDiv.appendChild(aisleLabel);
+  }
+  container.appendChild(leftSide);
+  container.appendChild(aisleDiv);
+  container.appendChild(rightSide);
+  for (let i = 49; i <= 50; i++) backRow.innerHTML += makeSeatEl(i);
+}
+
+function makeSeatEl(num) {
+  const isTaken = takenSeats.includes(num);
+  const isSelected = selectedSeats.includes(num);
+  let cls = isTaken ? 'taken' : (isSelected ? 'selected' : 'available');
+  return `<div class="seat ${cls}" onclick="toggleSeat(${num})" title="مقعد ${num}" id="seat-${num}">${num}</div>`;
+}
+
+function toggleSeat(num) {
+  if (takenSeats.includes(num)) return;
+  const idx = selectedSeats.indexOf(num);
+  if (idx >= 0) selectedSeats.splice(idx, 1);
+  else selectedSeats.push(num);
+  updateSeatUI(num);
+  updateBookingPanel();
+}
+
+function updateSeatUI(num) {
+  const el = document.getElementById('seat-' + num);
+  if (!el) return;
+  el.className = 'seat ' + (takenSeats.includes(num) ? 'taken' : (selectedSeats.includes(num) ? 'selected' : 'available'));
+}
+
+function updateBookingPanel() {
+  const display = document.getElementById('selected-seats-display');
+  if (selectedSeats.length === 0) {
+    display.innerHTML = '<span style="color:var(--text-muted);font-size:0.85rem;">لم يتم اختيار مقاعد بعد</span>';
+  } else {
+    display.innerHTML = selectedSeats.sort((a,b)=>a-b).map(s => `<div class="seat-badge">مقعد ${s}</div>`).join('');
+  }
+  const price = parseInt(document.getElementById('bus-type').value);
+  const subtotal = price * selectedSeats.length;
+  const tax = Math.round(subtotal * 0.15 * 100) / 100;
+  const total = subtotal + tax;
+  document.getElementById('seats-count').textContent = selectedSeats.length;
+  document.getElementById('seat-price').textContent = price + ' ر.س';
+  document.getElementById('subtotal').textContent = subtotal.toFixed(2) + ' ر.س';
+  document.getElementById('tax-amount').textContent = tax.toFixed(2) + ' ر.س';
+  document.getElementById('total-amount').textContent = total.toFixed(2) + ' ر.س';
+}
+
+function updateBusPrice() { updateBookingPanel(); }
+
+async function confirmBusBooking() {
+  const name = document.getElementById('client-name').value.trim();
+  const idNum = document.getElementById('client-id').value.trim();
+  const phone = document.getElementById('client-phone').value.trim();
+  if (!name) { showNotification('❌ أدخل اسم العميل'); return; }
+  if (selectedSeats.length === 0) { showNotification('❌ اختر مقعداً على الأقل'); return; }
+
+  const price = parseInt(document.getElementById('bus-type').value);
+  const subtotal = price * selectedSeats.length;
+  const tax = Math.round(subtotal * 0.15 * 100) / 100;
+  const total = subtotal + tax;
+  const bookingId = 'B' + (++invoiceCounter);
+
+  const dbRecord = {
+    id: bookingId,
+    type: 'bus',
+    client: name,
+    client_id: idNum,
+    phone,
+    nationality: document.getElementById('client-nationality').value,
+    status: 'confirmed',
+    subtotal, tax, total,
+    payment: document.getElementById('payment-method').value,
+    seats: selectedSeats.join(','),
+    trip_from: document.getElementById('trip-from').value,
+    trip_to: document.getElementById('trip-to').value,
+    trip_date: document.getElementById('trip-date').value,
+    bus_type: document.getElementById('bus-type').options[document.getElementById('bus-type').selectedIndex].text,
+    seat_price: price
+  };
+
+  showLoadingOverlay(true);
+  try {
+    await sb.insert('bookings', dbRecord);
+    const booking = {
+      ...dbRecord,
+      clientId: idNum,
+      from: dbRecord.trip_from,
+      to: dbRecord.trip_to,
+      date: dbRecord.trip_date,
+      busType: dbRecord.bus_type,
+      price,
+      seats: [...selectedSeats],
+      timestamp: new Date().toLocaleDateString('ar-SA')
+    };
+    allBookings.unshift(booking);
+    takenSeats = [...takenSeats, ...selectedSeats];
+    selectedSeats = [];
+    renderBus();
+    updateBookingPanel();
+    updateDashboard();
+    showInvoice(booking);
+    showNotification('✅ تم الحجز وحفظه في قاعدة البيانات! رقم: ' + bookingId);
+  } catch(e) {
+    showNotification('❌ فشل الحفظ: ' + e.message);
+    console.error(e);
+  }
+  showLoadingOverlay(false);
+}
+
+// ============ HOTELS ============
+const hotels = [
+  { id: 1, name: 'سكن مكه 4 خاص', city: 'مكة المكرمة', stars: 4, price: 480, icon: '🕌', amenities: ['واي فاي', 'إفطار', 'موقف سيارات', 'قريب من الحرم'], dist: '200م من الحرم' },
+  { id: 2, name: 'فندق الأبراج الذهبية', city: 'مكة المكرمة', stars: 5, price: 850, icon: '🏰', amenities: ['واي فاي', 'مسبح', 'إفطار', 'نقل'], dist: '100م من الحرم' },
+  { id: 3, name: 'فندق الهلال', city: 'مكة المكرمة', stars: 3, price: 320, icon: '🌙', amenities: ['واي فاي', 'موقف سيارات'], dist: '500م من الحرم' },
+  { id: 4, name: 'فندق المدينة بلازا', city: 'المدينة المنورة', stars: 4, price: 400, icon: '🕍', amenities: ['واي فاي', 'إفطار', 'نقل'], dist: '300م من المسجد النبوي' },
+  { id: 5, name: 'قصر النور', city: 'المدينة المنورة', stars: 5, price: 700, icon: '✨', amenities: ['واي فاي', 'مسبح', 'إفطار', 'سبا'], dist: '150م من المسجد النبوي' },
+  { id: 6, name: 'فندق جدة الدولي', city: 'جدة', stars: 4, price: 380, icon: '🌊', amenities: ['واي فاي', 'مسبح', 'بحر'], dist: 'شاطئ جدة' },
+];
+
+function renderHotels(filtered) {
+  const grid = document.getElementById('hotels-grid');
+  const list = filtered || hotels;
+  grid.innerHTML = list.map(h => `
+    <div class="hotel-card">
+      <div class="hotel-img">
+        <span style="font-size:5rem;z-index:1;">${h.icon}</span>
+        <div class="hotel-stars">★ ${h.stars} نجوم</div>
+      </div>
+      <div class="hotel-info">
+        <div class="hotel-name">${h.name}</div>
+        <div class="hotel-location">📍 ${h.city} - ${h.dist}</div>
+        <div class="hotel-amenities">${h.amenities.map(a => `<div class="amenity-tag">${a}</div>`).join('')}</div>
+        <div class="hotel-price-row">
+          <div class="hotel-price">${h.price} ر.س<span>/ليلة</span></div>
+          <button class="btn btn-gold" style="padding:0.5rem 1.2rem;font-size:0.85rem;" onclick="openHotelModal(${h.id})">احجز الآن</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function filterHotels() {
+  const city = document.getElementById('hotel-city').value;
+  renderHotels(city ? hotels.filter(h => h.city === city) : hotels);
+}
+
+function openHotelModal(id) {
+  currentHotel = hotels.find(h => h.id === id);
+  document.getElementById('modal-hotel-name').textContent = '🏨 حجز: ' + currentHotel.name;
+  updateHotelSummary();
+  document.getElementById('hotel-modal').classList.add('open');
+}
+
+function updateHotelSummary() {
+  if (!currentHotel) return;
+  const cin = document.getElementById('h-checkin').value;
+  const cout = document.getElementById('h-checkout').value;
+  const rooms = parseInt(document.getElementById('h-rooms').value) || 1;
+  let nights = 1;
+  if (cin && cout) { const diff = (new Date(cout) - new Date(cin)) / 86400000; if (diff > 0) nights = diff; }
+  const subtotal = currentHotel.price * rooms * nights;
+  const tax = Math.round(subtotal * 0.15 * 100) / 100;
+  const total = subtotal + tax;
+  document.getElementById('hotel-price-summary').innerHTML = `
+    <div class="price-row"><span>سعر الليلة</span><span>${currentHotel.price} ر.س</span></div>
+    <div class="price-row"><span>عدد الليالي</span><span>${nights}</span></div>
+    <div class="price-row"><span>عدد الغرف</span><span>${rooms}</span></div>
+    <div class="price-row"><span>المجموع الفرعي</span><span>${subtotal} ر.س</span></div>
+    <div class="price-row"><span>ضريبة 15%</span><span>${tax.toFixed(2)} ر.س</span></div>
+    <div class="price-row total"><span>الإجمالي</span><span>${total.toFixed(2)} ر.س</span></div>
+  `;
+}
+
+document.addEventListener('change', e => {
+  if (['h-checkin','h-checkout','h-rooms'].includes(e.target.id)) updateHotelSummary();
+});
+
+async function confirmHotelBooking() {
+  const name = document.getElementById('h-client-name').value.trim();
+  if (!name) { showNotification('❌ أدخل اسم العميل'); return; }
+  const cin = document.getElementById('h-checkin').value;
+  const cout = document.getElementById('h-checkout').value;
+  const rooms = parseInt(document.getElementById('h-rooms').value) || 1;
+  let nights = 1;
+  if (cin && cout) { const diff = (new Date(cout) - new Date(cin)) / 86400000; if (diff > 0) nights = diff; }
+  const subtotal = currentHotel.price * rooms * nights;
+  const tax = Math.round(subtotal * 0.15 * 100) / 100;
+  const total = subtotal + tax;
+  const bookingId = 'H' + (++invoiceCounter);
+
+  const dbRecord = {
+    id: bookingId,
+    type: 'hotel',
+    client: name,
+    client_id: document.getElementById('h-client-id').value,
+    phone: document.getElementById('h-client-phone').value,
+    nationality: document.getElementById('h-client-nat').value,
+    status: 'confirmed',
+    subtotal, tax, total,
+    payment: document.getElementById('h-payment').value,
+    hotel: currentHotel.name,
+    city: currentHotel.city,
+    checkin: cin,
+    checkout: cout,
+    nights, rooms,
+    price_per_night: currentHotel.price
+  };
+
+  showLoadingOverlay(true);
+  try {
+    await sb.insert('bookings', dbRecord);
+    const booking = { ...dbRecord, clientId: dbRecord.client_id, pricePerNight: dbRecord.price_per_night, timestamp: new Date().toLocaleDateString('ar-SA') };
+    allBookings.unshift(booking);
+    updateDashboard();
+    closeModal('hotel-modal');
+    showInvoice(booking);
+    showNotification('✅ تم حجز الفندق وحفظه! رقم: ' + bookingId);
+  } catch(e) {
+    showNotification('❌ فشل الحفظ: ' + e.message);
+    console.error(e);
+  }
+  showLoadingOverlay(false);
+}
+
+async function deleteBooking(id) {
+  if (!confirm('هل أنت متأكد من حذف هذا الحجز؟')) return;
+  showLoadingOverlay(true);
+  try {
+    await sb.remove('bookings', id);
+    allBookings = allBookings.filter(b => b.id !== id);
+    // rebuild takenSeats
+    takenSeats = [];
+    allBookings.filter(b => b.type === 'bus').forEach(b => { takenSeats = [...takenSeats, ...b.seats]; });
+    updateDashboard();
+    renderInvoicesList();
+    renderBus();
+    showNotification('🗑️ تم حذف الحجز بنجاح');
+  } catch(e) {
+    showNotification('❌ فشل الحذف: ' + e.message);
+  }
+  showLoadingOverlay(false);
+}
+
+// ============ INVOICE ============
+function showInvoice(booking) {
+  const isHotel = booking.type === 'hotel';
+  document.getElementById('invoice-content').innerHTML = `
+    <div class="invoice-paper">
+      <div class="invoice-header">
+        <div class="invoice-logo">
+          ✈️ واحة طيبة للسفريات والعمرة
+          <small>Taiba Oasis Traveling & Umrah</small>
+          <small>الرقم الضريبي: 314758178300003 &nbsp;|&nbsp; رخصة السياحة: 73106877</small>
+          <small>س.ت: 7054176263 &nbsp;|&nbsp; 📞 0534046143</small>
+          <small>📍 الدمام، حي ابن خلدون، الشارع الثامن عشر</small>
+        </div>
+        <div class="invoice-num">
+          فاتورة مبيعات
+          <strong>${booking.id}</strong>
+          <div style="font-size:0.75rem;margin-top:4px;">${booking.timestamp}</div>
+        </div>
+      </div>
+      <div class="invoice-body" style="color:#000;">
+        <div class="inv-section-title">بيانات العميل</div>
+        <table class="inv-table" style="margin-bottom:1rem;">
+          <tr><th>الاسم</th><td>${booking.client}</td><th>رقم الهوية</th><td>${booking.clientId || booking.client_id || '-'}</td></tr>
+          <tr><th>رقم الجوال</th><td>${booking.phone || '-'}</td><th>الجنسية</th><td>${booking.nationality}</td></tr>
+        </table>
+        <div class="inv-section-title">تفاصيل الحجز</div>
+        ${isHotel ? `
+        <table class="inv-table">
+          <thead><tr><th>الفندق</th><th>المدينة</th><th>تاريخ الدخول</th><th>تاريخ الخروج</th><th>الغرف</th><th>الليالي</th><th>السعر/ليلة</th></tr></thead>
+          <tbody><tr>
+            <td>${booking.hotel}</td><td>${booking.city}</td><td>${booking.checkin}</td>
+            <td>${booking.checkout}</td><td>${booking.rooms}</td><td>${booking.nights}</td>
+            <td>${booking.pricePerNight || booking.price_per_night} ر.س</td>
+          </tr></tbody>
+        </table>` : `
+        <table class="inv-table">
+          <thead><tr><th>الرحلة</th><th>نوع الباص</th><th>تاريخ السفر</th><th>المقاعد</th><th>عدد المقاعد</th><th>السعر/مقعد</th></tr></thead>
+          <tbody><tr>
+            <td>${booking.from || booking.trip_from} ← ${booking.to || booking.trip_to}</td>
+            <td>${booking.busType || booking.bus_type}</td>
+            <td>${booking.date || booking.trip_date}</td>
+            <td>${(Array.isArray(booking.seats) ? booking.seats : booking.seats.split(',')).join('، ')}</td>
+            <td>${Array.isArray(booking.seats) ? booking.seats.length : booking.seats.split(',').length}</td>
+            <td>${booking.price || booking.seat_price} ر.س</td>
+          </tr></tbody>
+        </table>`}
+        <div style="display:flex;justify-content:flex-end;margin-top:1rem;">
+          <table style="width:300px;font-size:0.9rem;">
+            <tr><td style="padding:4px 8px;color:#555;">المجموع الفرعي</td><td style="text-align:left;padding:4px 8px;">${Number(booking.subtotal).toFixed(2)} ر.س</td></tr>
+            <tr><td style="padding:4px 8px;color:#555;">ضريبة القيمة المضافة (15%)</td><td style="text-align:left;padding:4px 8px;">${Number(booking.tax).toFixed(2)} ر.س</td></tr>
+            <tr style="font-weight:700;font-size:1.1rem;"><td style="padding:8px;color:#000;">الإجمالي</td><td style="text-align:left;padding:8px;color:#C9A84C;">${Number(booking.total).toFixed(2)} ر.س</td></tr>
+          </table>
+        </div>
+        <div style="background:#f9f9f9;border-radius:8px;padding:0.8rem;margin-top:1rem;font-size:0.8rem;color:#555;">
+          <strong>تنبيه:</strong> لا تسترد القيمة في حالة التخلف أو الاعتذار أو التعديل إلا قبل الرحلة بـ48 ساعة مع خصم 20%.<br>
+          يستوجب الحضور قبل الرحلة بنصف ساعة. يُمنع التدخين. طريقة الدفع: ${booking.payment}
+        </div>
+        <div style="margin-top:1rem;border-top:2px solid #eee;padding-top:0.8rem;display:flex;justify-content:space-between;font-size:0.75rem;color:#888;">
+          <div>
+            <strong style="color:#000;">واحة طيبة للسفريات والعمرة</strong><br>
+            📍 الدمام، حي ابن خلدون، الشارع الثامن عشر<br>
+            📞 0534046143
+          </div>
+          <div style="text-align:left;">
+            الرقم الضريبي: 314758178300003<br>
+            رخصة السياحة: 73106877<br>
+            السجل التجاري: 7054176263
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+  allBookings[0].invoiceHTML = document.getElementById('invoice-content').innerHTML;
+  renderInvoicesList();
+  document.getElementById('invoice-modal').classList.add('open');
+}
+
+function printInvoice() {
+  const content = document.getElementById('invoice-content').innerHTML;
+  const win = window.open('', '_blank');
+  win.document.write(`<html><head><meta charset="UTF-8"><link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700;900&display=swap" rel="stylesheet"><style>
+    body{font-family:'Tajawal',sans-serif;background:#fff;color:#000;direction:rtl;padding:20px;}
+    .invoice-header{background:linear-gradient(135deg,#0d1b35,#1a3a5c);color:white;padding:1.5rem 2rem;display:flex;justify-content:space-between;align-items:center;}
+    .invoice-logo{font-size:1rem;font-weight:900;color:#C9A84C;}
+    .invoice-logo small{display:block;font-size:0.65rem;color:rgba(255,255,255,.7);font-weight:400;}
+    .invoice-num{text-align:left;font-size:.75rem;color:rgba(255,255,255,.7);}
+    .invoice-num strong{display:block;font-size:1.1rem;color:#C9A84C;}
+    .invoice-body{padding:1.5rem;}
+    table{width:100%;border-collapse:collapse;margin-bottom:1rem;font-size:.85rem;}
+    th{background:#f0f0f0;padding:.5rem .7rem;text-align:right;font-weight:700;border:1px solid #ddd;}
+    td{padding:.5rem .7rem;border:1px solid #ddd;}
+    .inv-section-title{font-size:.75rem;font-weight:700;color:#666;border-bottom:1px solid #eee;padding-bottom:.3rem;margin-bottom:.5rem;}
+    @media print{body{padding:0;}}
+  </style></head><body>${content}</body></html>`);
+  win.document.close();
+  win.print();
+}
+
+// ============ DASHBOARD ============
+function updateDashboard() {
+  const busCount = allBookings.filter(b => b.type === 'bus').length;
+  const hotelCount = allBookings.filter(b => b.type === 'hotel').length;
+  const clients = new Set(allBookings.map(b => b.client)).size;
+  const revenue = allBookings.reduce((s, b) => s + (Number(b.total) || 0), 0);
+  document.getElementById('stat-bus').textContent = busCount;
+  document.getElementById('stat-hotel').textContent = hotelCount;
+  document.getElementById('stat-clients').textContent = clients;
+  document.getElementById('stat-revenue').textContent = Math.round(revenue).toLocaleString('ar');
+  const list = document.getElementById('bookings-list');
+  if (allBookings.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">📭</div><p>لا توجد حجوزات بعد.</p></div>';
+    return;
+  }
+  list.innerHTML = allBookings.slice(0, 10).map(b => `
+    <div class="booking-item">
+      <div>
+        <div class="booking-id">${b.id}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-top:2px;">${b.timestamp}</div>
+      </div>
+      <div>
+        <div style="font-weight:600;">${b.client}</div>
+        <div style="font-size:0.8rem;color:var(--text-muted);">${b.phone || '-'}</div>
+      </div>
+      <span class="booking-type-badge ${b.type === 'bus' ? 'badge-bus' : 'badge-hotel'}">${b.type === 'bus' ? '🚌 باص' : '🏨 فندق'}</span>
+      <div style="font-weight:700;color:var(--gold);">${Number(b.total).toFixed(2)} ر.س</div>
+      <span class="status-badge status-confirmed">✓ مؤكد</span>
+      <button class="btn btn-outline" style="padding:0.4rem 0.8rem;font-size:0.8rem;" onclick="viewBookingInvoice('${b.id}')">🧾 الفاتورة</button>
+      <button class="btn btn-red" style="padding:0.4rem 0.8rem;font-size:0.8rem;" onclick="deleteBooking('${b.id}')">🗑️</button>
+    </div>
+  `).join('');
+}
+
+function viewBookingInvoice(id) {
+  const b = allBookings.find(x => x.id === id);
+  if (!b) return;
+  showInvoice(b);
+}
+
+function renderInvoicesList() {
+  const list = document.getElementById('invoices-list');
+  if (allBookings.length === 0) {
+    list.innerHTML = '<div class="empty-state"><div class="icon">📄</div><p>لا توجد فواتير بعد</p></div>';
+    return;
+  }
+  list.innerHTML = allBookings.map(b => `
+    <div class="booking-item" style="margin-bottom:0.5rem;">
+      <div class="booking-id">${b.id}</div>
+      <div>${b.client}</div>
+      <span class="booking-type-badge ${b.type === 'bus' ? 'badge-bus' : 'badge-hotel'}">${b.type === 'bus' ? '🚌 باص' : '🏨 فندق'}</span>
+      <div style="color:var(--gold);font-weight:700;">${Number(b.total).toFixed(2)} ر.س</div>
+      <div style="font-size:0.8rem;color:var(--text-muted);">${b.timestamp}</div>
+      <button class="btn btn-outline" style="padding:0.4rem 0.8rem;font-size:0.8rem;" onclick="viewBookingInvoice('${b.id}')">🧾 الفاتورة</button>
+      <button class="btn btn-red" style="padding:0.4rem 0.8rem;font-size:0.8rem;" onclick="deleteBooking('${b.id}')">🗑️ حذف</button>
+    </div>
+  `).join('');
+}
+
+// ============ UTILS ============
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function showNotification(msg) {
+  const n = document.getElementById('notification');
+  n.textContent = msg;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 3500);
+}
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+});
+
+// ============ INIT ============
+renderHotels();
+loadFromSupabase();
+</script>
+</body>
+</html>
